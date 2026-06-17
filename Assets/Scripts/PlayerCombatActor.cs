@@ -4,26 +4,39 @@ public class PlayerCombatActor : MonoBehaviour
 {
     [Header("Hubungan ke Sistem Utama")]
     public BattleSystem battleSystem; 
+    public MeshRenderer myRenderer; // Komponen visual karakter
 
-    // Dipanggil murni oleh Animator di frame 0:15
-    public void OpenCriticalWindow()
+    private Color originalColor = Color.white;
+
+    void Start()
     {
-        Debug.Log("<color=yellow>!!! CRITICAL WINDOW TERBUKA !!! TEKAN SPASI SEKARANG!</color>");
-        
-        if (battleSystem != null) 
-        {
-            battleSystem.isCriticalWindowOpen = true; 
-        }
+        // Menyimpan warna asli kapsul saat game dimulai
+        if (myRenderer != null) originalColor = myRenderer.material.color;
     }
 
-    // Dipanggil murni oleh Animator di frame 0:20
+    public void OpenCriticalWindow()
+    {
+        // Karakter menyala KUNING sebagai tanda peringatan QTE
+        if (myRenderer != null) myRenderer.material.color = Color.yellow; 
+        
+        if (battleSystem != null) battleSystem.isCriticalWindowOpen = true; 
+    }
+
     public void CloseCriticalWindow()
     {
-        Debug.Log("<color=red>--- Critical Window Tertutup ---</color>");
-        
-        if (battleSystem != null) 
+        // Kembalikan warna ke normal HANYA jika pemain gagal (warna masih kuning)
+        if (myRenderer != null && myRenderer.material.color == Color.yellow) 
         {
-            battleSystem.isCriticalWindowOpen = false;
+            myRenderer.material.color = originalColor;
         }
+        
+        if (battleSystem != null) battleSystem.isCriticalWindowOpen = false;
+    }
+
+    // Fungsi baru untuk dipanggil oleh BattleSystem saat Spasi ditekan sukses
+    public void FlashSuccess()
+    {
+        // Karakter menyala CYAN sebagai tanda sukses!
+        if (myRenderer != null) myRenderer.material.color = Color.cyan; 
     }
 }

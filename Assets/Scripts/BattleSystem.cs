@@ -26,8 +26,14 @@ public class BattleSystem : MonoBehaviour
 
     [Header("Komponen Animasi & Aksi")]
     public Animator playerAnimator; 
-    public bool isCriticalWindowOpen = false; // Dikontrol oleh Animation Event
-    private bool isCriticalHit = false; // Menyimpan status kesuksesan pemain
+    public Animator enemyAnimator; // TAMBAHAN: Animator untuk menggerakkan musuh
+    
+    // Status Mekanik QTE
+    public bool isCriticalWindowOpen = false; 
+    private bool isCriticalHit = false; 
+    
+    public bool isParryWindowOpen = false; // TAMBAHAN: Dikontrol oleh EnemyCombatActor
+    private bool isParried = false; // TAMBAHAN: Menyimpan status kesuksesan tangkisan
 
     void Start()
     {
@@ -65,16 +71,25 @@ public class BattleSystem : MonoBehaviour
                 StartCoroutine(PlayerAttack());
             }
         }
-        // Kondisi 2: Menekan Spasi di TENGAH animasi serangan (Mekanik QTE)
+        // Kondisi 2: Menekan Spasi di TENGAH animasi (Mekanik QTE untuk Serang & Bertahan)
         else if (state == BattleState.BUSY) 
         {
             if (Input.GetKeyDown(KeyCode.Space))
             {
-                // Jika ditekan tepat saat teks kuning muncul
+                // Jika ditekan saat jendela kritikal (Giliran Pemain)
                 if (isCriticalWindowOpen && !isCriticalHit)
                 {
                     isCriticalHit = true;
                     Debug.Log("<color=cyan>EKSEKUSI SEMPURNA! CRITICAL HIT AKTIF!</color>");
+                    
+                    // TAMBAHAN: Panggil fungsi warna Cyan di kapsul
+                    playerAnimator.GetComponent<PlayerCombatActor>().FlashSuccess();
+                }
+                // Jika ditekan saat jendela parry (Giliran Musuh)
+                else if (isParryWindowOpen && !isParried)
+                {
+                    isParried = true;
+                    Debug.Log("<color=cyan>TANGKISAN SEMPURNA! Damage Berkurang!</color>");
                 }
             }
         }
@@ -82,35 +97,32 @@ public class BattleSystem : MonoBehaviour
 
     IEnumerator PlayerAttack()
     {
-        state = BattleState.BUSY; // Kunci input agar tidak double-attack
-        isCriticalHit = false; // Reset status kritikal di awal serangan
+        state = BattleState.BUSY; 
+        isCriticalHit = false; 
         isCriticalWindowOpen = false;
 
         Debug.Log($"[PLAYER] {playerBaseData.unitName} meluncur maju!");
         
-        // Putar animasi dari awal (frame 0:00)
         if (playerAnimator != null)
         {
             playerAnimator.Play("AttackAnim", -1, 0f);
         }
 
-        // Tunggu 1 detik agar animasi selesai dan pemain punya waktu menekan tombol
         yield return new WaitForSeconds(1.0f); 
 
-        // KALKULASI DAMAGE
+        // KALKULASI DAMAGE PLAYER
         int finalDamage = playerBaseData.baseDamage;
         
-        // Jika pemain berhasil menekan Spasi di jendela waktu yang tepat
         if (isCriticalHit)
         {
-            finalDamage *= 2; // Damage digandakan sesuai dokumen GDD
+            finalDamage *= 2; 
             Debug.Log($"[SYSTEM] CRITICAL HIT! Damage meledak menjadi {finalDamage}!");
         }
 
         enemyCurrentHP -= finalDamage;
         if (enemyCurrentHP < 0) enemyCurrentHP = 0;
 
-        UpdateBattleUI(); // Hanya teks yang berubah, UI terjamin statis
+        UpdateBattleUI(); 
 
         yield return new WaitForSeconds(1.0f); 
 
@@ -129,10 +141,31 @@ public class BattleSystem : MonoBehaviour
     IEnumerator EnemyTurn()
     {
         state = BattleState.BUSY;
-        yield return new WaitForSeconds(1.5f); 
+        isParried = false; // Reset status parry
+        isParryWindowOpen = false;
 
-        int damage = enemyBaseData.baseDamage;
-        playerCurrentHP -= damage;
+        Debug.Log($"[ENEMY] {enemyBaseData.unitName} membalas serangan!");
+
+        // Putar animasi serangan musuh
+        if (enemyAnimator != null)
+        {
+            enemyAnimator.Play("EnemyAttackAnim", -1, 0f);
+        }
+
+        // Tunggu 1 detik agar animasi selesai dan pemain punya waktu menangkis
+        yield return new WaitForSeconds(1.0f); 
+
+        // KALKULASI DAMAGE MUSUH
+        int finalDamage = enemyBaseData.baseDamage;
+        
+        // Jika pemain sukses menekan Spasi di jendela waktu tangkisan
+        if (isParried)
+        {
+            finalDamage /= 2; // Damage musuh dipotong setengah
+            Debug.Log($"[SYSTEM] PARRY SUKSES! Damage ditahan menjadi {finalDamage}!");
+        }
+
+        playerCurrentHP -= finalDamage;
         if (playerCurrentHP < 0) playerCurrentHP = 0;
 
         UpdateBattleUI(); 
