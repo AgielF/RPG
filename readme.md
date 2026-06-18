@@ -32,6 +32,27 @@ Seluruh implementasi yang dilakukan berfokus pada penguatan sistem *Event-Driven
 
 ---
 
+
+▼ SISTEM UTAMA PERTARUNGAN (Battle System Core)
+  │
+  ├─► Pengendali Alur (Turn-Based State Machine)
+  │     ├─ START      : Pengisian data awal & inisialisasi entitas (UnitData)
+  │     ├─ PLAYERTURN : Fase aktif mendeteksi pilihan aksi pemain
+  │     ├─ BUSY       : Mengunci input utama selama animasi/aksi berlangsung
+  │     └─ END (WON/LOST) : Evaluasi akhir kondisi kesehatan entitas
+  │
+  ├─► Lapisan Logika Refleks (Active QTE Engine)
+  │     ├─ Window Controller : Mengatur batas waktu (timing window) respons pemain
+  │     └─ Input Interceptor : Mengubah fungsi tombol Spasi (Pemicu Serangan ➔ Detektor Kritikal)
+  │
+  ├─► Penghubung Animasi (Animation Event Linkage)
+  │     └─ PlayerVisual (Capsule) Timeline 
+  │          └─ Frame Puncak ➔ Memicu sinyal pembukaan jendela Critical secara real-time
+  │
+  └─► Lapisan Antarmuka Terisolasi (UI Visual Layer - Terkunci)
+        ├─ Komponen Data Statis   : Wadah penampung nama dan status yang tidak berubah posisi
+        └─ Komponen Output Text   : Pembaruan string (Teks HP/Pesan Sistem) tanpa menyentuh susunan RectTransform
+
 ## 3. Rencana Langkah Selanjutnya
 
 Fase berikutnya akan membalikkan arsitektur yang sudah kita bangun untuk melengkapi pilar keseimbangan permainan (*Duality of Gameplay*):

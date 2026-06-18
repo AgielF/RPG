@@ -1,8 +1,8 @@
 using System.Collections;
 using UnityEngine;
 using TMPro; 
+using UnityEngine.UI; 
 
-// Menambahkan state BUSY agar aksi terisolasi
 public enum BattleState { START, PLAYERTURN, ENEMYTURN, WON, LOST, BUSY } 
 
 public class BattleSystem : MonoBehaviour
@@ -16,24 +16,30 @@ public class BattleSystem : MonoBehaviour
     [Header("Status Pertarungan Saat Ini")]
     public int playerCurrentHP;
     public int enemyCurrentHP;
+    
+    // --- TAMBAHAN MEKANIK SP ---
+    public int playerCurrentSP;
+    public int playerMaxSP = 50; // Kapasitas maksimal SP Pemain
 
-    [Header("Komponen UI Visual (Statis) - JANGAN DIUBAH")]
+    [Header("Komponen UI Visual (Teks Statis)")]
     public TextMeshProUGUI playerNameText;
-    public TextMeshProUGUI playerHPText;
-    public TextMeshProUGUI enemyNameText;
-    public TextMeshProUGUI enemyHPText;
+    public TextMeshProUGUI enemyNameText; // Sekarang digunakan untuk nama di tengah Bar Boss
     public TextMeshProUGUI systemMessageText; 
+
+    [Header("Komponen UI Visual (Bar Dinamis)")]
+    public Image playerHPBar; 
+    public Image playerSPBar; 
+    public Image enemyHPBar; // TAMBAHAN: Bar darah boss di atas layar
 
     [Header("Komponen Animasi & Aksi")]
     public Animator playerAnimator; 
-    public Animator enemyAnimator; // TAMBAHAN: Animator untuk menggerakkan musuh
+    public Animator enemyAnimator; 
     
-    // Status Mekanik QTE
     public bool isCriticalWindowOpen = false; 
     private bool isCriticalHit = false; 
     
-    public bool isParryWindowOpen = false; // TAMBAHAN: Dikontrol oleh EnemyCombatActor
-    private bool isParried = false; // TAMBAHAN: Menyimpan status kesuksesan tangkisan
+    public bool isParryWindowOpen = false; 
+    private bool isParried = false; 
 
     void Start()
     {
@@ -47,6 +53,7 @@ public class BattleSystem : MonoBehaviour
         
         playerCurrentHP = playerBaseData.maxHP;
         enemyCurrentHP = enemyBaseData.maxHP;
+        playerCurrentSP = playerMaxSP; // Isi penuh SP di awal pertarungan
 
         UpdateBattleUI(); 
 
@@ -58,34 +65,41 @@ public class BattleSystem : MonoBehaviour
 
     void PlayerTurn()
     {
-        Debug.Log($"[PLAYER] Giliran {playerBaseData.unitName}! Tekan Spasi untuk Menyerang!");
+        Debug.Log($"[PLAYER] Giliran {playerBaseData.unitName}! Pilih perintah menu (A/X/Y/O).");
     }
 
     void Update()
     {
-        // Kondisi 1: Menekan Spasi untuk memulai serangan (Saat Diam)
         if (state == BattleState.PLAYERTURN)
         {
-            if (Input.GetKeyDown(KeyCode.Space))
+            if (Input.GetKeyDown(KeyCode.A)) // Tombol A -> Attack
             {
                 StartCoroutine(PlayerAttack());
             }
+            else if (Input.GetKeyDown(KeyCode.X)) // Tombol X -> Skill
+            {
+                OnSkillButtonPushed();
+            }
+            else if (Input.GetKeyDown(KeyCode.Y)) // Tombol Y -> Item
+            {
+                OnItemButtonPushed();
+            }
+            else if (Input.GetKeyDown(KeyCode.O)) // Tombol O -> Guard
+            {
+                OnGuardButtonPushed();
+            }
         }
-        // Kondisi 2: Menekan Spasi di TENGAH animasi (Mekanik QTE untuk Serang & Bertahan)
         else if (state == BattleState.BUSY) 
         {
             if (Input.GetKeyDown(KeyCode.Space))
             {
-                // Jika ditekan saat jendela kritikal (Giliran Pemain)
                 if (isCriticalWindowOpen && !isCriticalHit)
                 {
                     isCriticalHit = true;
                     Debug.Log("<color=cyan>EKSEKUSI SEMPURNA! CRITICAL HIT AKTIF!</color>");
-                    
-                    // TAMBAHAN: Panggil fungsi warna Cyan di kapsul
-                    playerAnimator.GetComponent<PlayerCombatActor>().FlashSuccess();
+                    if(playerAnimator != null && playerAnimator.GetComponent<PlayerCombatActor>() != null)
+                        playerAnimator.GetComponent<PlayerCombatActor>().FlashSuccess();
                 }
-                // Jika ditekan saat jendela parry (Giliran Musuh)
                 else if (isParryWindowOpen && !isParried)
                 {
                     isParried = true;
@@ -101,18 +115,13 @@ public class BattleSystem : MonoBehaviour
         isCriticalHit = false; 
         isCriticalWindowOpen = false;
 
-        Debug.Log($"[PLAYER] {playerBaseData.unitName} meluncur maju!");
+        Debug.Log($"[PLAYER] {playerBaseData.unitName} mengeksekusi Attack!");
         
-        if (playerAnimator != null)
-        {
-            playerAnimator.Play("AttackAnim", -1, 0f);
-        }
+        if (playerAnimator != null) playerAnimator.Play("AttackAnim", -1, 0f);
 
         yield return new WaitForSeconds(1.0f); 
 
-        // KALKULASI DAMAGE PLAYER
         int finalDamage = playerBaseData.baseDamage;
-        
         if (isCriticalHit)
         {
             finalDamage *= 2; 
@@ -138,30 +147,93 @@ public class BattleSystem : MonoBehaviour
         }
     }
 
+    public void OnSkillButtonPushed()
+    {
+        int skillCost = 15; // Biaya SP untuk memakai skill
+
+        if (playerCurrentSP >= skillCost)
+        {
+            state = BattleState.BUSY;
+            playerCurrentSP -= skillCost; // Kurangi SP
+            Debug.Log($"Sistem: Mengeluarkan Skill! Sisa SP: {playerCurrentSP}");
+            
+            UpdateBattleUI(); 
+            
+            StartCoroutine(ExecuteSkillTurn());
+        }
+        else
+        {
+            Debug.LogWarning("Sistem: SP Tidak Cukup untuk memakai Skill!");
+        }
+    }
+
+    IEnumerator ExecuteSkillTurn()
+    {
+        yield return new WaitForSeconds(1.0f);
+        
+        enemyCurrentHP -= (playerBaseData.baseDamage + 10);
+        
+        // Memastikan HP musuh tidak tembus ke angka minus
+        if (enemyCurrentHP < 0) enemyCurrentHP = 0; 
+        
+        UpdateBattleUI();
+
+        yield return new WaitForSeconds(1.0f);
+        
+        if (enemyCurrentHP <= 0)
+        {
+            state = BattleState.WON;
+            EndBattle(); 
+        }
+        else
+        {
+            state = BattleState.ENEMYTURN;
+            StartCoroutine(EnemyTurn());
+        }
+    }
+
+    public void OnItemButtonPushed()
+    {
+        state = BattleState.BUSY;
+        Debug.Log("Sistem: Memakai Item Potion (+20 HP)");
+        
+        playerCurrentHP += 20;
+        if (playerCurrentHP > playerBaseData.maxHP) playerCurrentHP = playerBaseData.maxHP;
+        
+        UpdateBattleUI();
+        StartCoroutine(ExecuteGuardTurn()); 
+    }
+
+    public void OnGuardButtonPushed()
+    {
+        state = BattleState.BUSY; 
+        Debug.Log("Sistem: Karakter Bertahan (Guard)! Giliran dilempar ke musuh.");
+        StartCoroutine(ExecuteGuardTurn()); 
+    }
+
+    IEnumerator ExecuteGuardTurn()
+    {
+        yield return new WaitForSeconds(1.0f); 
+        state = BattleState.ENEMYTURN;
+        StartCoroutine(EnemyTurn());
+    }
+
     IEnumerator EnemyTurn()
     {
         state = BattleState.BUSY;
-        isParried = false; // Reset status parry
+        isParried = false; 
         isParryWindowOpen = false;
 
         Debug.Log($"[ENEMY] {enemyBaseData.unitName} membalas serangan!");
 
-        // Putar animasi serangan musuh
-        if (enemyAnimator != null)
-        {
-            enemyAnimator.Play("EnemyAttackAnim", -1, 0f);
-        }
+        if (enemyAnimator != null) enemyAnimator.Play("EnemyAttackAnim", -1, 0f);
 
-        // Tunggu 1 detik agar animasi selesai dan pemain punya waktu menangkis
         yield return new WaitForSeconds(1.0f); 
 
-        // KALKULASI DAMAGE MUSUH
         int finalDamage = enemyBaseData.baseDamage;
-        
-        // Jika pemain sukses menekan Spasi di jendela waktu tangkisan
         if (isParried)
         {
-            finalDamage /= 2; // Damage musuh dipotong setengah
+            finalDamage /= 2; 
             Debug.Log($"[SYSTEM] PARRY SUKSES! Damage ditahan menjadi {finalDamage}!");
         }
 
@@ -186,10 +258,27 @@ public class BattleSystem : MonoBehaviour
 
     void UpdateBattleUI()
     {
+        // Update Nama
         if (playerNameText != null) playerNameText.text = playerBaseData.unitName;
-        if (playerHPText != null) playerHPText.text = $"HP: {playerCurrentHP} / {playerBaseData.maxHP}";
         if (enemyNameText != null) enemyNameText.text = enemyBaseData.unitName;
-        if (enemyHPText != null) enemyHPText.text = $"HP: {enemyCurrentHP} / {enemyBaseData.maxHP}";
+
+        // Visual Bar HP Pemain (Hijau)
+        if (playerHPBar != null && playerBaseData != null) 
+        {
+            playerHPBar.fillAmount = (float)playerCurrentHP / playerBaseData.maxHP;
+        }
+
+        // Visual Bar SP Pemain (Biru)
+        if (playerSPBar != null)
+        {
+            playerSPBar.fillAmount = (float)playerCurrentSP / playerMaxSP;
+        }
+
+        // Visual Bar HP Boss (Merah/Kustom)
+        if (enemyHPBar != null && enemyBaseData != null)
+        {
+            enemyHPBar.fillAmount = (float)enemyCurrentHP / enemyBaseData.maxHP;
+        }
     }
 
     void EndBattle()
