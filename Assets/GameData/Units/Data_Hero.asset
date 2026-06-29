@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2e31d229dcf326e5eac737b8aab8a11d, type: 3}
+  m_Name: Data_Hero
+  m_EditorClassIdentifier: 
+  unitName: Protagonis
+  maxHP: 20
+  maxSP: 100
+  baseDamage: 5
+  unitElement: 0
+  weakness: 0
+  skills:
+  - {fileID: 11400000, guid: ac931f111ae9dcc44a53bd1f2e999c46, type: 2}
+  - {fileID: 11400000, guid: e4d496fc685ee7d6f88f281c8638ede9, type: 2}
+  items:
+  - {fileID: 11400000, guid: b43ed70a57fe032c39fbf8e6fd96fd22, type: 2}

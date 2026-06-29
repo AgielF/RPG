@@ -59,3 +59,44 @@ Fase berikutnya akan membalikkan arsitektur yang sudah kita bangun untuk melengk
 1. **Perancangan Serangan Musuh:** Membuat klip gerakan fisik untuk objek `EnemyVisual` (Kotak) agar meluncur menyerang protagonis.
 2. **Pemicuan Jendela Tangkisan (Active Parry Window):** Menanamkan sinyal peringatan beberapa *frame* sebelum serangan musuh mendarat.
 3. **Kalkulasi Mitigasi Damage:** Menyusun logika pertahanan di mana *damage* yang diterima pemain akan dipotong secara drastis jika berhasil menangkis tepat waktu.
+
+## 4. Dokumentasi Teknis Minggu ke-4: Sistem Animasi & Combat Unity
+
+Subjek: Integrasi Animasi Karakter, Perbaikan Posisi (Sinking Issue), dan Implementasi Combo Event.
+
+### 4.1 Pendahuluan
+Dokumentasi ini mencatat proses konfigurasi, pemecahan masalah, dan praktik terbaik dalam mengintegrasikan aset animasi (dari Mixamo) ke dalam project Unity. Fokus utama meliputi perbaikan posisi karakter (floating/sinking) dan implementasi Animation Event untuk sistem combat.
+
+### 4.2 Masalah Umum & Troubleshooting
+
+Gejala | Penyebab Utama | Solusi
+---|---|---
+Karakter tenggelam ke lantai | Animasi terbaca sebagai Generic, bukan Humanoid | Set Rig ke Humanoid & Apply.
+Karakter melayang saat lari | Root Transform Position (Y) tidak diatur. | Gunakan Based Upon: Feet & Bake Into Pose.
+Combo tidak terpicu | Animation Event hilang atau salah posisi. | Tambahkan `OpenCriticalWindow` dan `CloseCriticalWindow`.
+
+### 4.3 Checklist Konfigurasi Animasi
+
+A. Rigging (Sangat Penting)
+- Pastikan `Animation Type` diset ke `Humanoid`.
+- Pastikan `Avatar Definition` diset ke `Create From This Model`.
+- Klik tombol `Apply` setelah perubahan untuk memicu pemrosesan ulang oleh Unity.
+
+B. Pengaturan Animation (Root Motion)
+- `Bake Into Pose`: Wajib dicentang untuk `Rotation` dan `Position (Y)` agar animasi tidak menggeser posisi GameObject container secara tidak terkendali.
+- `Based Upon (Position Y)`: Gunakan `Feet`. Ini adalah kunci agar telapak kaki model menempel di lantai secara otomatis.
+- `Loop Time`: Centang untuk animasi pergerakan seperti `Idle` atau `Run`.
+
+### 4.4 Implementasi Animation Event (Sistem Combat)
+
+Untuk mendukung sistem combo, pastikan file animasi memiliki event yang sesuai dengan skrip Combat Controller:
+- `OpenCriticalWindow()`: Posisikan saat tebasan pedang dimulai (sebelum kontak).
+- `CloseCriticalWindow()`: Posisikan saat ayunan pedang selesai.
+
+Catatan: Jika garis putih penunjuk waktu tidak bisa digeser karena bug UI Unity, gunakan tombol `Play` pada panel Preview untuk menyegarkan tampilan, atau geser langsung ikon pita penanda event di timeline.
+
+### 4.5 Tips Pengembangan
+
+- Selalu verifikasi pengaturan `Rig` dan `Animation` segera setelah mengimpor aset baru.
+- Gunakan `Revert` jika terjadi kesalahan pengaturan pada Event timeline agar kembali ke status awal yang bersih.
+- Jangan memasukkan nilai `Offset` jika sudah menggunakan pengaturan `Based Upon: Feet`, karena akan menyebabkan karakter melayang.

@@ -1,0 +1,6 @@
+P33
+
+yg masih pe er 
+
+animasi enemy ke player belum ad ajika pure skrip dan ketika event parry itu musuh harus tetap berada di depan objek player 
+
