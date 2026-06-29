@@ -4,7 +4,7 @@ Selamat datang di repositori proyek Battle System. Dokumentasi ini dirancang unt
 
 ## 📋 Prasyarat (Prerequisites)
 Sebelum melakukan *clone* dan membuka proyek, pastikan perangkat Anda memiliki:
-* **Unity Hub** & **Unity Editor** (Versi yang digunakan: **2022.3.2f1**)
+* **Unity Hub** & **Unity Editor** (Versi yang digunakan: **2022.3.62f3**)
 * **Git** yang sudah terinstal di sistem Anda.
 
 ## 🚀 Cara Setup Proyek
