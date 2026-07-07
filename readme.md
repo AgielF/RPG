@@ -142,3 +142,41 @@ Catatan: Jika garis putih penunjuk waktu tidak bisa digeser karena bug UI Unity,
 - Selalu verifikasi pengaturan `Rig` dan `Animation` segera setelah mengimpor aset baru.
 - Gunakan `Revert` jika terjadi kesalahan pengaturan pada Event timeline agar kembali ke status awal yang bersih.
 - Jangan memasukkan nilai `Offset` jika sudah menggunakan pengaturan `Based Upon: Feet`, karena akan menyebabkan karakter melayang.
+
+---
+
+## 🏗️ Laporan Progress Lingkungan 3D: Proyek "Social Braga Street"
+**Fase Fokus:** Tata Letak Hierarki Proyek, Kalibrasi Skala Spasial & Infrastruktur
+**Status Proyek:** Prototipe Terstruktur & Terkalibrasi
+
+### 1. Manajemen Struktur Hierarki (Baru)
+Pencapaian: Proyek kini memiliki sistem pengelompokan (*parenting*) yang sangat terorganisir untuk memisahkan antara entitas pemain dan elemen dunia.
+
+- **Sistem Karakter (`Player_Container`):** Karakter pemain kini dienkapsulasi dengan cerdas ke dalam sebuah wadah utama. Sistem ini berhasil memisahkan *logic* mekanik permainan (terlihat dari penyematan skrip `Player Combat Actor`) dengan aset visual 3D (*mesh*/*rigging*).
+- **Sistem Lingkungan (`Environment`):** Seluruh elemen tata kota diisolasi ke dalam satu *parent* utama dengan sub-kategori yang jelas:
+
+- **`Props`:** Didedikasikan untuk menampung infrastruktur jalanan sekunder seperti `trotoar_1`, `trotoar_extend_1`, dan `trotoar_circle`.
+- **`Ground`:** Folder khusus untuk menampung alas fondasi level dasar (`Ground_parent` dan `Plane`).
+- **`Buildings`:** Menjadi *hub* sentral untuk deretan arsitektur bangunan (`Building_Bakery`, `Coffee Shop`, dll) serta kumpulan objek balok pembatas jalan (`Cube 6` hingga `10`).
+
+### 2. Kalibrasi Proporsi Fasad Bangunan
+Pencapaian: Seluruh deretan bangunan pertokoan kini memiliki skala ukuran yang realistis dan ergonomis saat berinteraksi langsung dengan model karakter manusia.
+
+- **Bangunan Kustom (`building3_wraper`):** Diukur ulang menggunakan metode *Scale Wrapper* pada objek induk (skala `3.3612`) untuk memastikan ruang kepala (*headroom*) dan anak tangga yang proporsional.
+- **Bakery:** Nilai *Scale Factor* disesuaikan menjadi **`0.35`**.
+- **Music Store:** Nilai *Scale Factor* disesuaikan menjadi **`0.32`** agar gagang pintu ergonomis.
+- **Drug Store:** Nilai *Scale Factor* diturunkan drastis ke **`0.3`** untuk menghilangkan proporsi raksasa.
+- **Coffee Shop:** Nilai *Scale Factor* disusutkan ke **`0.27`** menyesuaikan jangkauan tangan karakter pada pintu ganda.
+
+### 3. Restrukturisasi Area Pejalan Kaki (Trotoar)
+Pencapaian: Menciptakan batas fisik elevasi yang jelas antara area kendaraan dan pejalan kaki.
+
+- **Elevasi Spasial:** Ketinggian *mesh* trotoar (*Position Y*) disetel lebih tinggi dibandingkan aspal jalan raya, memecah lanskap datar menjadi undakan kota yang natural.
+- **Pemetaan Tekstur (Tiling):** Nilai *Tiling* pada material `M_YFPM_Pavement01` ditingkatkan menjadi **`X: 5`** dan **`Y: 5`**. Ini mengkoreksi tekstur *paving stone* yang melar, menjadikannya padat dan proporsional dengan telapak kaki karakter.
+
+### 4. Konstruksi Kanstin (Pembatas Jalan Khas Braga)
+Pencapaian: Menciptakan batas demarkasi visual yang tegas dan sangat identik dengan struktur jalanan nyata.
+
+- **Kalibrasi Anatomi:** Susunan deretan *Cube* hitam-putih diubah dimensinya menjadi ketebalan (**Scale X**) `0.1`, tinggi penahan tebing (**Scale Y**) direntangkan untuk menutupi celah elevasi, dan panjang warna (**Scale Z**) ditingkatkan agar ritme belangnya lebih natural.
+- **Tata Letak Terpadu:** Balok-balok tersebut ditanam menempel pada sisi tebing trotoar, dengan dasar menyentuh aspal dan ujung atas menonjol setinggi mata kaki karakter (tinggi standar pembatas jalan nyata).
+

@@ -4,3 +4,38 @@ yg masih pe er
 
 animasi enemy ke player belum ad ajika pure skrip dan ketika event parry itu musuh harus tetap berada di depan objek player 
 
+
+saran untuk pengembangan lingkungan social life 
+
+Strategi Menyiasati Keterbatasan Aset Visual
+Jika kita harus menggunakan aset Low Poly ini (karena gratis), kita bisa menerapkan trik Art Direction yang sering digunakan developer indie untuk menyamarkan kesederhanaan aset 3D.
+
+1. Trik Pencahayaan (Baking & Post-Processing)
+Aset low poly terlihat "murah" karena pencahayaan bawaan Unity sangat standar.
+
+Jangan gunakan matahari siang bolong. Ubah latar waktunya menjadi Senja (Sunset) atau Malam Hari.
+
+Gunakan komponen Post-Processing Volume di Unity (wajib untuk game modern).
+
+Tambahkan efek Bloom (agar jendela kafe, tiang lampu, dan neon sign bersinar aesthetic).
+
+Tambahkan Color Grading (beri filter warna biru-ungu atau oranye hangat untuk menutupi tekstur low-poly yang pucat).
+
+2. Tambahkan Detail Kecil (Micro-Detailing)
+Jalan Braga terasa hidup bukan hanya karena gedungnya, tapi karena benda-benda kecil di trotoarnya.
+
+Cari aset tambahan yang sangat spesifik (dan gratis) di Sketchfab (bukan di Unity Asset Store).
+
+Gunakan kata kunci di Sketchfab: free coffee cup 3d model, free bench 3d model, free street lamp 3d model.
+
+Aset-aset kecil dari Sketchfab biasanya lebih detail dan bisa memecah kebosanan visual dari dinding gedung low-poly yang rata.
+
+3. Trik "Depth of Field" (Kamera Blur)
+Di seri Persona, saat pemain sedang berjalan-jalan di kota, area ujung jalan sering kali tertutup kabut tipis atau sedikit blur.
+
+Di Unity, gunakan efek Depth of Field pada Post-Processing.
+
+Fokuskan kamera hanya pada radius 5-10 meter di sekitar karakter Anda. Buat gedung-gedung di latar belakang sedikit mengabur (out of focus). Ini menyembunyikan fakta bahwa gedung tersebut adalah low-poly sederhana.
+
+
+

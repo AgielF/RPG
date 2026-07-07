@@ -20,8 +20,8 @@ public class BattleSystem : MonoBehaviour
     [Header("Komponen Animasi & Modul")]
     public Animator playerAnimator; 
     public Animator enemyAnimator; 
-    public BattleUIManager ui;       
-    public QTEManager qte;           
+    public BattleUIManager ui;        
+    public QTEManager qte;            
 
     [Header("Status Window Animasi")]
     public bool isCriticalWindowOpen = false; 
@@ -218,7 +218,7 @@ public class BattleSystem : MonoBehaviour
         }
     }
 
-    private IEnumerator PlayerComboAttackRoutine()
+   private IEnumerator PlayerComboAttackRoutine()
     {
         state = BattleState.BUSY; 
         ui.SetMenuVisibility(false); 
@@ -260,32 +260,53 @@ public class BattleSystem : MonoBehaviour
             // --- [INTEGRASI ANIMASI: TEBASAN COMBO] ---
             if (playerAnimator != null) playerAnimator.SetTrigger("Attack");
             
-            yield return wait02Sec; 
+            // Kondisi khusus untuk serangan ke-3 (terakhir)
+            if (i == 3)
+            {
+                yield return wait06Sec; // Tunggu ayunan serangan terakhir
+                
+                if (cachedPlayerCombatScript != null) cachedPlayerCombatScript.FlashSuccess();
+                currentComboHit++;
+                int finalDamage = Mathf.RoundToInt(playerBaseData.baseDamage * 2.5f); 
 
+                accumulatedDamage += finalDamage;
+                enemyCurrentHP = Mathf.Max(0, enemyCurrentHP - finalDamage);
+
+                ui.UpdateComboStats(currentComboHit, accumulatedDamage);
+                RefreshUI(); 
+                
+                break; // Hentikan loop karena ini serangan terakhir
+            }
+
+            // Mulai QTE untuk menyambung ke serangan 2 atau 3
             bool qteSuccess = false;
             yield return StartCoroutine(qte.StartComboQTE((result) => qteSuccess = result));
 
             if (qteSuccess)
             {
                 if (cachedPlayerCombatScript != null) cachedPlayerCombatScript.FlashSuccess();
+                
                 currentComboHit++;
                 int damage = playerBaseData.baseDamage;
-                if (i == 3) damage = Mathf.RoundToInt(damage * 2.5f); 
-
+                
                 accumulatedDamage += damage;
                 enemyCurrentHP = Mathf.Max(0, enemyCurrentHP - damage);
 
                 ui.UpdateComboStats(currentComboHit, accumulatedDamage);
                 RefreshUI(); 
                 
-                yield return wait04Sec; 
-                if (enemyCurrentHP <= 0) break; 
+                if (enemyCurrentHP <= 0) break; // Keluar jika musuh hancur di tengah kombo
+                
+                // PENTING: Langsung kembali ke awal loop agar memicu SetTrigger("Attack") secara instan
             }
             else
             {
                 isComboFailed = true;
-                if (playerAnimator != null) playerAnimator.Rebind(); 
-                break; 
+                if (playerAnimator != null) playerAnimator.ResetTrigger("Attack"); // Hapus antrian trigger
+                
+                // TAMBAHAN: Beri waktu 0.2 detik agar karakter menyelesaikan sisa ayunan pedangnya dengan natural
+                yield return new WaitForSeconds(0.2f); 
+                break; // Keluar dari loop kombo
             }
         }
 
@@ -294,9 +315,16 @@ public class BattleSystem : MonoBehaviour
             Debug.Log("<color=cyan>MUNDUR KE POSISI AWAL</color>");
             
             // --- [INTEGRASI ANIMASI: LARI MUNDUR] ---
-            playerAnimator.SetBool("IsRunning", true);
+            if (playerAnimator != null)
+            {
+                // TAMBAHAN: Paksa Animator melakukan transisi halus ke state lari dalam 0.1 detik
+                playerAnimator.CrossFade("Anim_Run", 0.1f); 
+                playerAnimator.SetBool("IsRunning", true);
+            }
+            
             yield return StartCoroutine(cachedPlayerCombatScript.ReturnToBaseRoutine(0.2f));
-            playerAnimator.SetBool("IsRunning", false);
+            
+            if (playerAnimator != null) playerAnimator.SetBool("IsRunning", false);
         }
 
         yield return isComboFailed ? wait03Sec : wait1Sec; 
