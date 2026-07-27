@@ -10,6 +10,7 @@ using UnityEngine.AI;
 ///   - Waypoint Navigation: bergerak ke sejumlah Transform target secara berurutan atau acak.
 ///   - Animation Sync: mengirim nilai kecepatan nyata NPC ke parameter "Speed" di Animator
 ///     sehingga transisi Idle <-> Walk terjadi secara mulus.
+///   - NEW: Random Offset agar pejalan kaki berjalan menyebar secara natural (tidak sebaris).
 ///
 /// Cara Pasang (Inspector):
 ///   1. Tambahkan komponen NavMeshAgent, Animator, dan script ini ke prefab karakter.
@@ -35,6 +36,10 @@ public class PedestrianAI : MonoBehaviour
     [Tooltip("Jika aktif, NPC memilih waypoint berikutnya secara ACAK. " +
              "Jika tidak aktif, NPC berjalan BERURUTAN (A -> B -> C -> A -> ...).")]
     public bool randomOrder = false;
+
+    [Header("Radius Penyebaran Tujuan")]
+    [Tooltip("Membuat NPC mengambil titik acak di sekitar waypoint agar tidak menumpuk di 1 titik persis.")]
+    public float targetOffsetRadius = 1.5f;
 
     [Header("Jarak Deteksi Tiba")]
     [Tooltip("Jarak (meter) agar NPC dianggap telah 'tiba' di sebuah waypoint " +
@@ -164,7 +169,8 @@ public class PedestrianAI : MonoBehaviour
             MoveToNextWaypoint();
         }
     }
-/// <summary>
+
+    /// <summary>
     /// Menentukan dan menetapkan waypoint berikutnya yang VALID sebagai tujuan NavMeshAgent.
     /// </summary>
     private void MoveToNextWaypoint()
@@ -226,7 +232,13 @@ public class PedestrianAI : MonoBehaviour
         if (waypoints[_currentWaypointIndex] == null) return;
 
         _agent.isStopped = false;
-        _agent.SetDestination(waypoints[_currentWaypointIndex].position);
+
+        // --- TAMBAHAN OFFSET ACAK ---
+        // Membuat koordinat acak dalam lingkaran 2D di sekitar titik waypoint asli
+        Vector2 randomOffset = Random.insideUnitCircle * targetOffsetRadius;
+        Vector3 finalDestination = waypoints[_currentWaypointIndex].position + new Vector3(randomOffset.x, 0, randomOffset.y);
+
+        _agent.SetDestination(finalDestination);
     }
 
     // =========================================================
